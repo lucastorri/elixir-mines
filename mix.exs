@@ -7,6 +7,7 @@ defmodule Mines.Mixfile do
      elixir: "~> 1.2",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     escript: escript,
      deps: deps]
   end
 
@@ -14,7 +15,7 @@ defmodule Mines.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger]]
+    [applications: [:logger], mod: {Mines, []}]
   end
 
   # Dependencies can be Hex packages:
@@ -29,4 +30,11 @@ defmodule Mines.Mixfile do
   defp deps do
     []
   end
+
+  defp escript do
+    []
+    # [main_module: Mines,
+     # embedd_elixir: true]
+  end
+
 end

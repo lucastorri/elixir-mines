@@ -25,7 +25,7 @@ defmodule Mines.Game do
     %Mines.Game{won: false, lost: false, squares: map}
   end
 
-  def flagSwap(game, position) do
+  def flag_swap(game, position) do
     square = game.squares[position]
     square = %{square | flagged: !square.flagged}
     squares = %{game.squares | position => square}
@@ -59,7 +59,10 @@ defmodule Mines.Game do
   end
 
   defp won(squares) do
-    squares |> Map.values |> Enum.filter(fn sq -> !sq.mined end) |> Enum.all?(fn sq -> sq.clicked end)
+    squares
+      |> Map.values
+      |> Enum.filter(fn sq -> !sq.mined end)
+      |> Enum.all?(fn sq -> sq.clicked end)
   end
 
 end

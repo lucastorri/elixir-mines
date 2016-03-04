@@ -54,8 +54,8 @@ defmodule GameTest do
   test "flags squares" do
     g1 = tiny_game
 
-    g2 = Game.flagSwap(g1, {0, 1})
-    g3 = Game.flagSwap(g2, {0, 1})
+    g2 = Game.flag_swap(g1, {0, 1})
+    g3 = Game.flag_swap(g2, {0, 1})
 
     assert g1.squares[{0, 1}].flagged == false
     assert g2.squares[{0, 1}].flagged == true

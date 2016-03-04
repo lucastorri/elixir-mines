@@ -1,5 +1,4 @@
 alias Mines.Square
-alias Mines.GameReport
 
 defmodule Mines.GameReport do
 
@@ -9,7 +8,6 @@ defmodule Mines.GameReport do
         square_state = case sq do
           %Square{clicked: true, mined: true} -> :exploded
           %Square{clicked: true} -> :"swept_#{neighbouring_mines(game, sq.position)}"
-          %Square{flagged: true} -> :flagged
           %Square{flagged: true} -> :flagged
           %Square{} -> :unknown
         end
