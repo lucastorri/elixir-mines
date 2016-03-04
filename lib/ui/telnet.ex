@@ -103,16 +103,7 @@ defmodule Mines.UI.Telnet do
       :unknown -> "?"
       :flagged -> "@"
       :exploded -> "*"
-      :swept_0 -> "0"
-      :swept_1 -> "1"
-      :swept_2 -> "2"
-      :swept_3 -> "3"
-      :swept_4 -> "4"
-      :swept_5 -> "5"
-      :swept_6 -> "6"
-      :swept_7 -> "7"
-      :swept_8 -> "8"
-      :swept_9 -> "9"
+      n -> to_string(n)
     end
   end
 

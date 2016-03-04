@@ -25,7 +25,7 @@ defmodule GameReportTest do
   test "reports a won game report" do
     game = GameTest.tiny_game
       |> Game.sweep({0, 1})
-      |> Game.flagSwap({1, 1})
+      |> Game.flag_swap({1, 1})
       |> Game.sweep({1, 0})
 
     report = GameReport.report(game)
@@ -35,8 +35,8 @@ defmodule GameReportTest do
       lost: false,
       squares: %{
         {0, 0} => :unknown,
-        {0, 1} => :swept_2,
-        {1, 0} => :swept_2,
+        {0, 1} => 2,
+        {1, 0} => 2,
         {1, 1} => :flagged
       }
     }
@@ -45,7 +45,7 @@ defmodule GameReportTest do
   test "reports a lost game report" do
     game = GameTest.tiny_game
       |> Game.sweep({0, 1})
-      |> Game.flagSwap({1, 1})
+      |> Game.flag_swap({1, 1})
       |> Game.sweep({0, 0})
 
     report = GameReport.report(game)
@@ -55,7 +55,7 @@ defmodule GameReportTest do
       lost: true,
       squares: %{
         {0, 0} => :exploded,
-        {0, 1} => :swept_2,
+        {0, 1} => 2,
         {1, 0} => :unknown,
         {1, 1} => :flagged
       }

@@ -7,7 +7,7 @@ defmodule Mines.GameReport do
       for {position, sq} <- game.squares, into: %{} do
         square_state = case sq do
           %Square{clicked: true, mined: true} -> :exploded
-          %Square{clicked: true} -> :"swept_#{neighbouring_mines(game, sq.position)}"
+          %Square{clicked: true} -> neighbouring_mines(game, sq.position)
           %Square{flagged: true} -> :flagged
           %Square{} -> :unknown
         end
