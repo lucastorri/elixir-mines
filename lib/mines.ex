@@ -1,0 +1,2 @@
+defmodule Mines do
+end
