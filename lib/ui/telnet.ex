@@ -9,10 +9,8 @@ defmodule Mines.UI.Telnet do
 
   def start(args) do
     port = is_list(args) && args[:port] || 9023
-    case :gen_tcp.listen(port, @options) do
-      {:ok, socket} -> accept_connection(socket)
-      error -> error
-    end
+    with {:ok, socket} <- :gen_tcp.listen(port, @options),
+      do: accept_connection(socket)
   end
 
   defp accept_connection(socket) do
