@@ -5,7 +5,7 @@ alias Mines.GameRegistry
 defmodule Mines.UI.Telnet do
 
   @options [:binary, packet: :line, active: false, reuseaddr: true]
-  @id_chars 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  @id_chars Stream.concat(?a..?z, ?0..?9) |> Enum.to_list
 
   def start(args) do
     port = is_list(args) && args[:port] || 9023
