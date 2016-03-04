@@ -26,10 +26,14 @@ defmodule Mines.Game do
   end
 
   def flag_swap(game, position) do
-    square = game.squares[position]
-    square = %{square | flagged: !square.flagged}
-    squares = %{game.squares | position => square}
-    %{game | squares: squares}
+    case game.squares[position] do
+      nil ->
+        game
+      square ->
+        square = %{square | flagged: !square.flagged}
+        squares = %{game.squares | position => square}
+        %{game | squares: squares}
+    end
   end
 
   def sweep(game = %Mines.Game{lost: true}, _) do
@@ -41,9 +45,14 @@ defmodule Mines.Game do
   end
 
   def sweep(game, position) do
-    square = %{game.squares[position] | clicked: true}
-    squares = %{game.squares | position => square}
-    %{game | squares: squares, lost: square.mined, won: won(squares)}
+    case game.squares[position] do
+      nil ->
+        game
+      square ->
+        square = %{square | clicked: true}
+        squares = %{game.squares | position => square}
+        %{game | squares: squares, lost: square.mined, won: won(squares)}
+    end
   end
 
   def finished(game) do

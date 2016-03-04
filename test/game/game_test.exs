@@ -63,6 +63,18 @@ defmodule GameTest do
     assert !Game.finished(g3)
   end
 
+  test "ignores invalid sweeps" do
+    game = tiny_game
+
+    assert Game.sweep(game, {1024, 1024}) == game
+  end
+
+  test "ignores invalid flags" do
+    game = tiny_game
+
+    assert Game.flag_swap(game, {1024, 1024}) == game
+  end
+
   defp squares_and_mines(game) do
     {square_count(game), mines_count(game)}
   end
