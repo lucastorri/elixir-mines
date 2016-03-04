@@ -8,4 +8,8 @@ defmodule SquareTest do
     assert !%Square{}.clicked
   end
 
+  test "starts not flagged" do
+    assert !%Square{}.flagged
+  end
+
 end

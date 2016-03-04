@@ -51,6 +51,18 @@ defmodule GameTest do
     assert game.won and !game.lost
   end
 
+  test "flags squares" do
+    g1 = tiny_game
+
+    g2 = Game.flagSwap(g1, {0, 1})
+    g3 = Game.flagSwap(g2, {0, 1})
+
+    assert g1.squares[{0, 1}].flagged == false
+    assert g2.squares[{0, 1}].flagged == true
+    assert g3.squares[{0, 1}].flagged == false
+    assert !Game.finished(g3)
+  end
+
   defp squares_and_mines(game) do
     {square_count(game), mines_count(game)}
   end
@@ -63,7 +75,7 @@ defmodule GameTest do
     game.squares |> Enum.filter(fn {_, sq} -> sq.mined end) |> Enum.count
   end
 
-  defp tiny_game do
+  def tiny_game do
     squares = for i <- 0..1, j <- 0..1, do: %Square{position: {i, j}, mined: i==j}
     Game.from_squares(squares)
   end
