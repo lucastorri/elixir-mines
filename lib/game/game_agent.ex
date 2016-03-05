@@ -4,7 +4,7 @@ alias Mines.GameReport
 defmodule Mines.GameAgent do
 
   def start(game) do
-    {status, agent} = Agent.start_link(fn -> game end)
+    {status, agent} = Agent.start(fn -> game end)
     {status, agent, report(game)}
   end
 

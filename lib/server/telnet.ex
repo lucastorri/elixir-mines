@@ -2,7 +2,7 @@ alias Mines.Game
 alias Mines.GameAgent
 alias Mines.GameRegistry
 
-defmodule Mines.UI.Telnet do
+defmodule Mines.Server.Telnet do
 
   @options [:binary, packet: :line, active: false, reuseaddr: true]
   @id_chars Stream.concat(?a..?z, ?0..?9) |> Enum.to_list

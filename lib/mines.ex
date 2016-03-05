@@ -9,7 +9,7 @@ defmodule Mines do
     GameRegistry.init
 
     children = [
-      worker(Task, [Mines.UI.Telnet, :start, [[port: 2323]]])
+      worker(Task, [Mines.Server.Telnet, :start, [[port: 2323]]])
     ]
 
     opts = [strategy: :one_for_one, name: Mines.Supervisor]
