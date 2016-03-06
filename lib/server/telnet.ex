@@ -1,43 +1,139 @@
-alias Mines.GameRegistry
-
 require Logger
 
-defmodule Mines.Server.Telnet do
-  use Mines.Server
+alias Mines.Server.Telnet
+alias Mines.Server.Telnet.State
+alias Mines.Server.Telnet.Handler
+
+defmodule Mines.Server.Telnet.Supervisor do
+  use Supervisor
+  @behaviour Mines.Server.Supervisor
 
   @tcp_options [:binary, packet: :line, active: false, reuseaddr: true]
 
-  def start(args) do
-    Logger.debug "starting telnet server with args #{inspect args}"
-    port = is_list(args) && args[:port] || 9023
-    with {:ok, socket} <- :gen_tcp.listen(port, @tcp_options),
-      do: accept_connection(socket)
+  def start_link do
+    start_link([])
   end
 
-  defp accept_connection(socket) do
+  def start_link(args) do
+    Supervisor.start_link(__MODULE__, is_list(args) && args || [])
+  end
+
+  def init(args) do
+    port = args[:port] || 9023
+    with {:ok, socket} <- :gen_tcp.listen(port, @tcp_options) do
+      children = [
+        worker(Telnet, [socket], restart: :permanent)
+      ]
+      supervise(children, strategy: :one_for_one)
+    end
+  end
+
+end
+
+defmodule Mines.Server.Telnet.State do
+
+  defstruct socket: nil, accepting: 0, handling: 0
+
+  def update(state, increments) do
+    %{state |
+      accepting: state.accepting + (increments[:accepting] || 0),
+      handling: state.handling + (increments[:handling] || 0)}
+  end
+
+end
+
+defmodule Mines.Server.Telnet do
+  use GenServer
+
+  @min_accepting_handlers 5
+  @max_handling_handlers 10
+
+  def start_link(socket) do
+    GenServer.start_link(__MODULE__, socket)
+  end
+
+  def init(socket) do
+    Logger.debug "Starting Server"
+    state = %State{socket: socket}
+    {:ok, check(state)}
+  end
+
+  def handle_cast(message, state) do
+    Logger.debug "Server: #{message}"
+    increments = case message do
+      :handler_accepting -> [accepting: +1]
+      :handler_handling -> [accepting: -1, handling: +1]
+      :handler_exiting -> [handling: -1]
+    end
+    new_state = State.update(state, increments)
+    {:noreply, check(new_state)}
+  end
+
+  defp check(state) do
+
+    total_handlers = state.accepting + state.handling
+    if state.accepting < @min_accepting_handlers and
+       total_handlers < @max_handling_handlers,
+       do: new_handler(state)
+
+    state
+  end
+
+  defp new_handler(state) do
+    Handler.start_link(self, state.socket)
+  end
+
+end
+
+defmodule Mines.Server.Telnet.Handler do
+  use Mines.Server.Handler
+  use GenServer
+
+  def start_link(server, socket) do
+    GenServer.start_link(__MODULE__, [server, socket])
+  end
+
+  def init([server, socket]) do
+    GenServer.cast(self, :accept)
+    {:ok, {server, socket}}
+  end
+
+  def handle_cast(:accept, {server, socket}) do
+    GenServer.cast(server, :handler_accepting)
     case :gen_tcp.accept(socket) do
       {:ok, conn} ->
-        Task.start(fn -> handle_connection(conn, nil) end)
-        accept_connection(socket)
-      {:error, _} ->
-        :gen_tcp.close(socket)
+        GenServer.cast(server, :handler_handling)
+        GenServer.cast(self, :handle)
+        {:noreply, {server, conn, nil}}
+      {:error, err} ->
+        {:stop, err, socket}
     end
   end
 
-  defp handle_connection(conn, game) do
+  def handle_cast(:handle, state = {server, conn, game}) do
     case :gen_tcp.recv(conn, 0) do
       {:ok, input} ->
-        {game, response} =
-          input
-            |> String.strip
-            |> parse
-            |> run(game)
-
-        reply(render(response), conn)
-        handle_connection(conn, game)
-      {:error, _} ->
-        :gen_tcp.close(conn)
+        GenServer.cast(self, :handle)
+        {game, response} = handle_input(input, game)
+        reply(response, conn)
+        {:noreply, put_elem(state, 2, game)}
+      {:error, :closed} ->
+        GenServer.cast(server, :handler_exiting)
+        {:stop, :normal, state}
+      {:error, err} ->
+        GenServer.cast(server, :handler_exiting)
+        {:stop, err, state}
     end
+  end
+
+  defp handle_input(input, game) do
+    {game, response} =
+      input
+        |> String.strip
+        |> parse
+        |> exec(game)
+
+    {game, render(response)}
   end
 
   defp reply(message, conn) do

@@ -1,4 +1,5 @@
 alias Mines.GameRegistry
+alias Mines.Server.Telnet
 
 defmodule Mines do
   use Application
@@ -9,7 +10,7 @@ defmodule Mines do
     GameRegistry.init
 
     children = [
-      worker(Task, [Mines.Server.Telnet, :start, [[port: 2323]]])
+      worker(Telnet.Supervisor, [port: 2323])
     ]
 
     opts = [strategy: :one_for_one, name: Mines.Supervisor]
