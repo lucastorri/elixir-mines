@@ -1,16 +1,16 @@
-alias Mines.Game
-alias Mines.GameAgent
 alias Mines.GameRegistry
 
-defmodule Mines.Server.Telnet do
-  @behaviour Mines.Server
+require Logger
 
-  @options [:binary, packet: :line, active: false, reuseaddr: true]
-  @id_chars Stream.concat(?a..?z, ?0..?9) |> Enum.to_list
+defmodule Mines.Server.Telnet do
+  use Mines.Server
+
+  @tcp_options [:binary, packet: :line, active: false, reuseaddr: true]
 
   def start(args) do
+    Logger.debug "starting telnet server with args #{inspect args}"
     port = is_list(args) && args[:port] || 9023
-    with {:ok, socket} <- :gen_tcp.listen(port, @options),
+    with {:ok, socket} <- :gen_tcp.listen(port, @tcp_options),
       do: accept_connection(socket)
   end
 
@@ -27,13 +27,13 @@ defmodule Mines.Server.Telnet do
   defp handle_connection(conn, game) do
     case :gen_tcp.recv(conn, 0) do
       {:ok, input} ->
-        {game, replies} =
+        {game, response} =
           input
             |> String.strip
             |> parse
             |> run(game)
 
-        replies |> Enum.each(&reply(&1, conn))
+        reply(render(response), conn)
         handle_connection(conn, game)
       {:error, _} ->
         :gen_tcp.close(conn)
@@ -45,42 +45,16 @@ defmodule Mines.Server.Telnet do
     :gen_tcp.send(conn, "\n")
   end
 
-  defp run(cmd, current_game)
-
-  defp run({:new}, _) do
-    case GameAgent.start(Game.from_atom(:small)) do
-      {:ok, game, state} ->
-        game_id = register(game)
-        {game, ["New game #{game_id} started", render(state)]}
-      {:error, _, _} ->
-        {nil, ["Could not start a new game"]}
+  defp render(response) do
+    case response do
+      %Response{msg: nil, state: nil} -> ""
+      %Response{msg: nil, state: state} -> render_state(state)
+      %Response{msg: msg, state: nil} -> msg
+      %Response{msg: msg, state: state} -> msg <> "\n" <> render_state(state)
     end
   end
 
-  defp run({:continue, game_id}, _) do
-    case GameRegistry.get(game_id) do
-      {:ok, game} ->
-        {game, [render(GameAgent.state(game))]}
-      {:error, _} ->
-        {nil, ["Could not load game #{game_id}"]}
-    end
-  end
-
-  defp run({:sweep, position}, current_game) do
-    state = GameAgent.sweep(current_game, position)
-    {current_game, [render(state)]}
-  end
-
-  defp run({:flag, position}, current_game) do
-    state = GameAgent.flag_swap(current_game, position)
-    {current_game, [render(state)]}
-  end
-
-  defp run(_, current_game) do
-    {current_game, ["Unknown command"]}
-  end
-
-  defp render(state) do
+  defp render_state(state) do
     headline = cond do
       state.won -> ["YOU WIN!"]
       state.lost -> ["YOU LOSE"]
@@ -94,7 +68,7 @@ defmodule Mines.Server.Telnet do
         |> Enum.map(&render_square(state.squares[{i, &1}]))
         |> Enum.join(" ")
     end
-    Enum.join(headline ++ lines ++ ["\n"], "\n")
+    Enum.join(headline ++ lines ++ [""], "\n")
   end
 
   defp render_square(sq) do
@@ -103,13 +77,6 @@ defmodule Mines.Server.Telnet do
       :flagged -> "@"
       :exploded -> "*"
       n -> to_string(n)
-    end
-  end
-
-  defp register(game) do
-    case GameRegistry.register(random_id, game) do
-      {:ok, id} -> id
-      {:error, _} -> register(game)
     end
   end
 
@@ -133,10 +100,6 @@ defmodule Mines.Server.Telnet do
       true ->
         {:unknown}
     end
-  end
-
-  defp random_id do
-    to_string for _ <- 0..8, do: Enum.random(@id_chars)
   end
 
 end
