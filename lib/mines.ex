@@ -10,7 +10,7 @@ defmodule Mines do
     GameRegistry.init
 
     children = [
-      worker(Telnet.Supervisor, [port: 2323])
+      supervisor(Telnet.Supervisor, [port: 2323])
     ]
 
     opts = [strategy: :one_for_one, name: Mines.Supervisor]
