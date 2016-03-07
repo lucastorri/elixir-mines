@@ -2,7 +2,6 @@ defmodule Mines.Server.Handler do
 
   defmacro __using__(_) do
     quote do
-      @behaviour unquote(__MODULE__)
 
       alias Mines.Game
       alias Mines.GameAgent
