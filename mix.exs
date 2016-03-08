@@ -20,7 +20,8 @@ defmodule Mines.Mixfile do
 
   defp deps do
     [
-      {:credo, "~> 0.3", only: [:dev, :test]}
+      {:credo, "~> 0.3", only: [:dev, :test]},
+      {:exrm, "~> 1.0"}
     ]
   end
 
