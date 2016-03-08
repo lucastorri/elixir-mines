@@ -60,11 +60,11 @@ defmodule Mines.Game do
   end
 
   defp square_positions(size) do
-    for i <- 0..(size-1), j <- 0..(size-1), do: {i, j}
+    for i <- 0..(size - 1), j <- 0..(size - 1), do: {i, j}
   end
 
-  defp random_mines(square_positions, total) do
-    MapSet.new(Enum.take_random(square_positions, total))
+  defp random_mines(positions, total) do
+    MapSet.new(Enum.take_random(positions, total))
   end
 
   defp won(squares) do

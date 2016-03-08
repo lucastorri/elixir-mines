@@ -24,4 +24,13 @@ defmodule GameAgentTest do
     assert state == GameReport.report(Game.sweep(game, {0, 1}))
   end
 
+  test "exceptions should not change the current state" do
+    bad_game = %Game{squares: %{{0,1} => nil}}
+    {:ok, agent, _} = GameAgent.start(bad_game)
+
+    state = GameAgent.sweep(agent, {0, 1})
+
+    assert state == bad_game
+  end
+
 end

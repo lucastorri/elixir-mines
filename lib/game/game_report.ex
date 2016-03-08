@@ -18,8 +18,8 @@ defmodule Mines.GameReport do
 
   def neighbouring_mines(game, {i, j}) do
     mined_neighbours =
-      for x <- (i-1)..(i+1),
-          y <- (j-1)..(j+1),
+      for x <- (i - 1)..(i + 1),
+          y <- (j - 1)..(j + 1),
           !(x == i and y == j),
           sq = game.squares[{x,y}],
           !is_nil(sq),

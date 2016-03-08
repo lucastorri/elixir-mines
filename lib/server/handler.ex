@@ -8,7 +8,7 @@ defmodule Mines.Server.Handler do
       alias Mines.GameRegistry
       alias Mines.Server.Response
 
-      @id_chars Stream.concat(?a..?z, ?0..?9) |> Enum.to_list
+      @id_chars Enum.to_list Stream.concat(?a..?z, ?0..?9)
 
       defp exec(cmd, current_game)
 
