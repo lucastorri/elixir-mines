@@ -4,6 +4,10 @@ alias Mines.Server.Telnet
 defmodule Mines do
   use Application
 
+  def start do
+    start(:normal, [])
+  end
+
   def start(_type, _args) do
     import Supervisor.Spec
 
