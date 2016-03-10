@@ -34,7 +34,12 @@ defmodule Mines.GameAgent do
 
   defp update(game_agent, fun) do
     Agent.get_and_update(game_agent, fn game ->
-      new_game = fun.(game)
+      new_game =
+        try do
+          fun.(game)
+        rescue
+          e -> game
+        end
       {report(new_game), new_game}
     end)
   end
