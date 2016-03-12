@@ -21,6 +21,8 @@ defmodule Mines.Mixfile do
   defp deps do
     [
       {:exrm, "~> 1.0"},
+      {:cauldron, "~> 0.1.5"},
+      {:exjson, "~> 0.5.0"},
       {:credo, "~> 0.3", only: [:dev, :test]},
       {:mock, "~> 0.1.1", only: :test}
     ]

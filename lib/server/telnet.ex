@@ -9,18 +9,19 @@ defmodule Mines.Server.Telnet.Supervisor do
   @behaviour Mines.Server.Supervisor
 
   @tcp_options [:binary, packet: :line, active: false, reuseaddr: true]
+  @defaults [port: 2222]
 
   def start_link do
     start_link([])
   end
 
   def start_link(args) do
-    Supervisor.start_link(__MODULE__, is_list(args) && args || [])
+    args = Keyword.merge(@defaults, is_list(args) && args || [])
+    Supervisor.start_link(__MODULE__, args)
   end
 
   def init(args) do
-    port = args[:port] || 9023
-    with {:ok, socket} <- :gen_tcp.listen(port, @tcp_options) do
+    with {:ok, socket} <- :gen_tcp.listen(args[:port], @tcp_options) do
       children = [
         worker(Telnet, [socket], restart: :permanent)
       ]

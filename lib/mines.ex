@@ -1,5 +1,5 @@
 alias Mines.GameRegistry
-alias Mines.Server.Telnet
+alias Mines.Server.{Http, Telnet}
 
 defmodule Mines do
   use Application
@@ -14,6 +14,7 @@ defmodule Mines do
     GameRegistry.init
 
     children = [
+      supervisor(Http.Supervisor, [port: 2323]),
       supervisor(Telnet.Supervisor, [port: 2323])
     ]
 
