@@ -1,0 +1,88 @@
+<!DOCTYPE HTML>
+<html>
+
+  <head>
+    <title>elixir-mines</title>
+    <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.5/handlebars.min.js"></script>
+    <script src="/js/main.js"></script>
+
+    <style>
+      .square {
+        line-height: 42px;
+        width: 42px;
+        text-align: center;
+      }
+      .square-flagged {
+        background-color: #696969;
+        color: #FF0000;
+        font-size: 36;
+      }
+      .square-unknown {
+        background-color: #696969;
+      }
+      .square-exploded {
+        background-color: #ff0000;
+        color: black;
+        font-size: 40;
+      }
+      .square-open {
+        background-color: #ffffff;
+        color: black;
+        font-size: 40;
+      }
+      .square-open-0 {
+        color: #DCDCDC;
+      }
+      .square-open-1 {
+        color: #0000FF;
+      }
+      .square-open-2 {
+        color: #228B22;
+      }
+      .square-open-3 {
+        color: #B22222;
+      }
+      .square-open-4 {
+        color: #191970;
+      }
+      .square-open-5 {
+        color: #A0522D;
+      }
+      .square-open-6 {
+        color: #20B2AA;
+      }
+      .square-open-7 {
+        color: #800080;
+      }
+      .square-open-8 {
+        color: #000000;
+      }
+    </style>
+  </head>
+
+  <body>
+
+    <a href="#" id="new">New game</a>
+    <div id="game"></div>
+
+    <script id="game-template" type="text/x-handlebars-template">
+      <div>{{msg}}</div>
+      <table>
+        <tbody>
+          {{#each lines}}
+          <tr>
+            {{#each columns}}
+            <td class="{{classes}}" data-row="{{row}}" data-column="{{column}}">
+              {{value}}
+            </td>
+            {{/each}}
+          </tr>
+          {{/each}}
+        </tbody>
+      </table>
+    </script>
+
+  </body>
+
+</html>

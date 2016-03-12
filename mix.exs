@@ -15,14 +15,14 @@ defmodule Mines.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger], mod: {Mines, []}]
+    [applications: [:logger, :cowboy], mod: {Mines, []}]
   end
 
   defp deps do
     [
       {:exrm, "~> 1.0"},
-      {:cauldron, "~> 0.1.5"},
       {:exjson, "~> 0.5.0"},
+      {:cowboy, "~> 1.0.4"},
       {:credo, "~> 0.3", only: [:dev, :test]},
       {:mock, "~> 0.1.1", only: :test}
     ]
