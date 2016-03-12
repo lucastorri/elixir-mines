@@ -16,7 +16,7 @@ defmodule Mines.GameReport do
     %{lost: game.lost, won: game.won, squares: squares}
   end
 
-  def neighbouring_mines(game, {i, j}) do
+  defp neighbouring_mines(game, {i, j}) do
     mined_neighbours =
       for x <- (i - 1)..(i + 1),
           y <- (j - 1)..(j + 1),

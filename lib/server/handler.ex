@@ -13,7 +13,7 @@ defmodule Mines.Server.Handler do
       defp exec(cmd, current_game)
 
       defp exec({:new}, _) do
-        case GameAgent.start(Game.from_atom(:small)) do
+        case GameAgent.new(Game.from_atom(:small)) do
           {:ok, game, state} ->
             game_id = register(game)
             {game, %Response{msg: "New game #{game_id} started", state: state}}

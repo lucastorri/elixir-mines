@@ -15,7 +15,7 @@ defmodule GameAgentTest do
   test "starts with a given game", context do
     game = context[:game]
 
-    {:ok, agent, state} = GameAgent.start(game)
+    {:ok, agent, state} = GameAgent.new(game)
 
     assert is_pid(agent)
     assert state == GameReport.report(game)
@@ -23,7 +23,7 @@ defmodule GameAgentTest do
 
   test "sweeps given positions", context do
     game = context[:game]
-    {:ok, agent, _} = GameAgent.start(game)
+    {:ok, agent, _} = GameAgent.new(game)
 
     state = GameAgent.sweep(agent, {0, 1})
 
@@ -32,7 +32,7 @@ defmodule GameAgentTest do
 
   test "exceptions should not change the current state", context do
     game = context[:game]
-    {:ok, agent, _} = GameAgent.start(game)
+    {:ok, agent, _} = GameAgent.new(game)
 
     mocked_game = [sweep: fn(^game, {0, 1}) -> :meck.exception(:error, :invalid) end]
     with_mock Game, mocked_game do
@@ -42,6 +42,30 @@ defmodule GameAgentTest do
       assert state == GameReport.report(game)
     end
 
+  end
+
+  test "notifies listeners of updates", context do
+    game = context[:game]
+    {:ok, agent, _} = GameAgent.new(game)
+
+    GameAgent.follow_updates(agent)
+    GameAgent.flag_swap(agent, {0, 1})
+    notification_1 = wait_message
+
+    GameAgent.unfollow_updates(agent)
+    GameAgent.flag_swap(agent, {0, 1})
+    notification_2 = wait_message
+
+    assert notification_1 == agent
+    assert notification_2 == :timed_out
+  end
+
+  defp wait_message do
+    receive do
+      e -> e
+    after
+      10 -> :timed_out
+    end
   end
 
 end

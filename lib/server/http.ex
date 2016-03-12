@@ -1,3 +1,5 @@
+alias Mines.Server.Http
+
 defmodule Mines.Server.Http.Supervisor do
   use Supervisor
   @behaviour Mines.Server.Supervisor
@@ -15,7 +17,7 @@ defmodule Mines.Server.Http.Supervisor do
 
   def init(args) do
     children = [
-      worker(Mines.Server.Http, [args[:port]], restart: :permanent)
+      worker(Http, [args[:port]], restart: :permanent)
     ]
     supervise(children, strategy: :one_for_one)
   end
