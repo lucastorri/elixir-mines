@@ -43,7 +43,7 @@ function update(res, ws) {
       var value = squares[row + '_' + column];
       var classes = 'square ';
       if (value === 'exploded') {
-        value = '*';
+        value = 'X';
         classes += 'square-exploded'
       } else if (value === 'flagged') {
         value = 'F';
