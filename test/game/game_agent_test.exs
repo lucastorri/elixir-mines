@@ -48,11 +48,11 @@ defmodule GameAgentTest do
     game = context[:game]
     {:ok, agent, _} = GameAgent.new(game)
 
-    GameAgent.follow_updates(agent)
+    follow_ref = GameAgent.follow_updates(agent)
     GameAgent.flag_swap(agent, {0, 1})
     notification_1 = wait_message
 
-    GameAgent.unfollow_updates(agent)
+    GameAgent.unfollow_updates(agent, follow_ref)
     GameAgent.flag_swap(agent, {0, 1})
     notification_2 = wait_message
 
