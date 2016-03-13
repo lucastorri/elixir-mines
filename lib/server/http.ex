@@ -25,7 +25,6 @@ defmodule Mines.Server.Http.Supervisor do
 end
 
 defmodule Mines.Server.Http do
-  use Mines.Server.Handler
   @behaviour(:cowboy_http_handler)
   @behaviour(:cowboy_websocket_handler)
 
@@ -50,12 +49,17 @@ defmodule Mines.Server.Http do
   end
 
   def websocket_init(_transport_name, req, _opts) do
-    {:ok, req, :undefined_state}
+    me = self
+    {:ok, handler} = Mines.Server.Handler.start_link(fn res ->
+      send me, {:res, render(res)}
+    end)
+    {:ok, req, handler}
   end
 
-  def websocket_handle({:text, msg}, req, game) do
-    {game, res} = exec(parse(msg), game)
-    {:reply, {:text, render(res)}, req, game, :hibernate}
+  def websocket_handle({:text, msg}, req, handler) do
+    cmd = parse(msg)
+    Mines.Server.Handler.command(handler, cmd)
+    {:ok, req, handler}
   end
 
   def websocket_handle(_any, req, state) do
@@ -66,7 +70,11 @@ defmodule Mines.Server.Http do
     {:reply, {:text, msg}, req, state}
   end
 
-  def websocket_info(_info, req, state) do
+  def websocket_info({:res, res}, req, state) do
+    {:reply, {:text, res}, req, state}
+  end
+
+  def websocket_info(info, req, state) do
     {:ok, req, state, :hibernate}
   end
 
@@ -85,7 +93,7 @@ defmodule Mines.Server.Http do
   defp parse(cmd) do
     cond do
       cmd == "n" ->
-        {:new}
+        :new
       String.match?(cmd, @cont_regex) ->
         [_, id] = Regex.run(@cont_regex, cmd)
         {:continue, id}

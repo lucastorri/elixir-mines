@@ -1,5 +1,6 @@
 require Logger
 
+alias Mines.Server.Response
 alias Mines.Server.Telnet
 alias Mines.Server.Telnet.State
 alias Mines.Server.Telnet.Handler
@@ -87,7 +88,6 @@ defmodule Mines.Server.Telnet do
 end
 
 defmodule Mines.Server.Telnet.Handler do
-  use Mines.Server.Handler
   use GenServer
 
   def start_link(server, socket) do
@@ -105,19 +105,22 @@ defmodule Mines.Server.Telnet.Handler do
       {:ok, conn} ->
         GenServer.cast(server, :handler_handling)
         GenServer.cast(self, :handle)
-        {:noreply, {server, conn, nil}}
+        {:ok, handler} = Mines.Server.Handler.start_link(fn res ->
+          render(res) |> reply(conn)
+        end)
+        {:noreply, {server, conn, handler}}
       {:error, err} ->
         {:stop, err, socket}
     end
   end
 
-  def handle_cast(:handle, state = {server, conn, game}) do
+  def handle_cast(:handle, state = {server, conn, handler}) do
     case :gen_tcp.recv(conn, 0) do
       {:ok, input} ->
         GenServer.cast(self, :handle)
-        {game, response} = handle_input(input, game)
-        reply(response, conn)
-        {:noreply, put_elem(state, 2, game)}
+        cmd = input |> String.strip |> parse
+        Mines.Server.Handler.command(handler, cmd)
+        {:noreply, state}
       {:error, :closed} ->
         GenServer.cast(server, :handler_exiting)
         {:stop, :normal, state}
@@ -125,16 +128,6 @@ defmodule Mines.Server.Telnet.Handler do
         GenServer.cast(server, :handler_exiting)
         {:stop, err, state}
     end
-  end
-
-  defp handle_input(input, game) do
-    {game, response} =
-      input
-        |> String.strip
-        |> parse
-        |> exec(game)
-
-    {game, render(response)}
   end
 
   defp reply(message, conn) do
@@ -184,7 +177,7 @@ defmodule Mines.Server.Telnet.Handler do
   defp parse(cmd) do
     cond do
       cmd == "n" ->
-        {:new}
+        :new
       String.match?(cmd, @cont_regex) ->
         [_, id] = Regex.run(@cont_regex, cmd)
         {:continue, id}

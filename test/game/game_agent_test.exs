@@ -56,8 +56,13 @@ defmodule GameAgentTest do
     GameAgent.flag_swap(agent, {0, 1})
     notification_2 = wait_message
 
-    assert notification_1 == agent
+    GameAgent.follow_updates(agent)
+    GameAgent.stop(agent)
+    notification_3 = wait_message
+
+    assert notification_1 == {:updated, agent}
     assert notification_2 == :timed_out
+    assert notification_3 == {:closing, agent}
   end
 
   defp wait_message do

@@ -11,7 +11,7 @@ defmodule Mines.GameAgent do
   end
 
   def init(game) do
-    {:ok, %State{game: game}}
+    {:ok, %State{game: game, last_update: System.system_time}}
   end
 
   def handle_call(:get, _from, state) do
@@ -22,12 +22,13 @@ defmodule Mines.GameAgent do
     new_game =
       try do
         new_game = f.(game)
-        notify_all(listeners, self)
+        notify_all(listeners, :updated)
         new_game
       rescue
         _ -> game
       end
-    {:reply, new_game, %{state | game: new_game}}
+    new_state = %{state | game: new_game, last_update: System.system_time}
+    {:reply, new_game, new_state}
   end
 
   def handle_cast({:follow, listener}, state = %State{listeners: listeners}) do
@@ -37,6 +38,11 @@ defmodule Mines.GameAgent do
 
   def handle_cast({:unfollow, listener}, state = %State{listeners: listeners}) do
     state = %{state | listeners: listeners |> MapSet.delete(listener)}
+    {:noreply, state}
+  end
+
+  def terminate(_reason, state = %State{listeners: listeners}) do
+    notify_all(listeners, :closing)
     {:noreply, state}
   end
 
@@ -60,10 +66,20 @@ defmodule Mines.GameAgent do
   end
 
   def follow_updates(game_agent, listener \\ self) do
+    ref = spawn(fn ->
+      :erlang.link(game_agent)
+      :erlang.monitor(:process, listener)
+      receive do
+        :done -> {}
+        {:DOWN, _, :process, ^listener, _} -> unfollow_updates(game_agent, self, listener)
+      end
+    end)
     GenServer.cast(game_agent, {:follow, listener})
+    ref
   end
 
-  def unfollow_updates(game_agent, listener \\ self) do
+  def unfollow_updates(game_agent, ref, listener \\ self) do
+    send ref, :done
     GenServer.cast(game_agent, {:unfollow, listener})
   end
 
@@ -71,11 +87,11 @@ defmodule Mines.GameAgent do
     GameReport.report(game)
   end
 
-  defp notify_all(listeners, game_agent) do
+  defp notify_all(listeners, event, game_agent \\ self) do
     spawn(fn ->
       Enum.each(listeners, fn l ->
         try do
-          send l, game_agent
+          send l, {event, game_agent}
         rescue
           _ -> {}
         end
