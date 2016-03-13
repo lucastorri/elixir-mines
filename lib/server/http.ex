@@ -111,9 +111,8 @@ defmodule Mines.Server.Http do
   defp render(response) do
     response =
       if response.state do
-        squares_as_lists =
-          Enum.to_list(response.state.squares) |> Enum.map(fn {{i,j}, v} -> [i, j, v] end)
-        put_in(response, [:state, :squares], squares_as_lists)
+        update_in(response.state.squares,
+          &(Enum.to_list(&1) |> Enum.map(fn {{i,j}, v} -> [i, j, v] end)))
       else
         response
       end
