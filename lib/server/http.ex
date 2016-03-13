@@ -113,10 +113,11 @@ defmodule Mines.Server.Http do
       if response.state do
         squares_as_lists =
           Enum.to_list(response.state.squares) |> Enum.map(fn {{i,j}, v} -> [i, j, v] end)
-        %{response | state: %{response.state | squares: squares_as_lists}}
+        put_in(response, [:state, :squares], squares_as_lists)
       else
         response
       end
+
 
     ExJSON.generate(response |> Map.delete(:__struct__))
   end

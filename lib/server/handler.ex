@@ -56,8 +56,6 @@ defmodule Mines.Server.Handler do
   end
 
   def handle_cast(msg, state) do
-    IO.puts ("unknown message")
-    IO.inspect msg
     {:noreply, state}
   end
 
