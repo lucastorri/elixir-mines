@@ -26,7 +26,7 @@ defmodule Mines.GameRegistry.Mnesia do
 
   def install do
     nodes = [node]
-    with :ok <- Mnesia.create_schema(nodes),
+    with :ok <- create_schema(nodes),
          :ok <- Mnesia.start,
          {:atomic, :ok} <- create_table(nodes),
          do: :ok
@@ -53,10 +53,23 @@ defmodule Mines.GameRegistry.Mnesia do
     end
   end
 
+  defp create_schema(nodes) do
+    case Mnesia.create_schema(nodes) do
+      :ok -> :ok
+      {:error, {_, {:already_exists, _}}} -> :ok
+      other -> other
+    end
+  end
+
   defp create_table(nodes) do
-    Mnesia.create_table(@table_name,
-      attributes: [:key, :val],
-      ram_copies: nodes)
+    create =
+      Mnesia.create_table(@table_name,
+        attributes: [:key, :val],
+        ram_copies: nodes)
+    case create do
+      {:aborted, {:already_exists, @table_name}} -> {:atomic, :ok}
+      other -> other
+    end
   end
 
   defp install_on(node) do
