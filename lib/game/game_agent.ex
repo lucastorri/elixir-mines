@@ -1,6 +1,31 @@
 alias Mines.Game
 alias Mines.GameReport
 alias Mines.GameAgent.State
+alias Mines.GameAgent.EventHandler
+
+defmodule Mines.GameAgent.State do
+
+  defstruct game: nil, events: nil, last_update: System.system_time
+
+end
+
+defmodule Mines.GameAgent.EventHandler do
+  use GenEvent
+
+  def init([game_agent, listener]) do
+    {:ok, {game_agent, listener}}
+  end
+
+  def handle_event(event, state = {game_agent, listener}) do
+    try do
+      send listener, {event, game_agent}
+    rescue
+      _ -> {}
+    end
+    {:ok, state}
+  end
+
+end
 
 defmodule Mines.GameAgent do
   use GenServer
@@ -11,18 +36,19 @@ defmodule Mines.GameAgent do
   end
 
   def init(game) do
-    {:ok, %State{game: game, last_update: System.system_time}}
+    with {:ok, events} = GenEvent.start_link(),
+      do: {:ok, %State{game: game, events: events}}
   end
 
   def handle_call(:get, _from, state) do
     {:reply, state.game, state}
   end
 
-  def handle_call({:update, f}, _from, state = %State{game: game, listeners: listeners}) do
+  def handle_call({:update, f}, _from, state = %State{game: game, events: events}) do
     new_game =
       try do
         new_game = f.(game)
-        notify_all(listeners, :updated)
+        notify_all(state, :updated)
         new_game
       rescue
         _ -> game
@@ -31,18 +57,19 @@ defmodule Mines.GameAgent do
     {:reply, new_game, new_state}
   end
 
-  def handle_cast({:follow, listener}, state = %State{listeners: listeners}) do
-    state = %{state | listeners: listeners |> MapSet.put(listener)}
+  def handle_call({:follow, listener}, _from, state = %State{events: events}) do
+    handler_ref = make_ref
+    GenEvent.add_mon_handler(events, {EventHandler, handler_ref}, [self, listener])
+    {:reply, handler_ref, state}
+  end
+
+  def handle_cast({:unfollow, handler_ref}, state = %State{events: events}) do
+    GenEvent.remove_handler(events, {EventHandler, handler_ref}, [])
     {:noreply, state}
   end
 
-  def handle_cast({:unfollow, listener}, state = %State{listeners: listeners}) do
-    state = %{state | listeners: listeners |> MapSet.delete(listener)}
-    {:noreply, state}
-  end
-
-  def terminate(_reason, state = %State{listeners: listeners}) do
-    notify_all(listeners, :closing)
+  def terminate(_reason, state) do
+    notify_all(state, :closing)
     {:noreply, state}
   end
 
@@ -66,37 +93,19 @@ defmodule Mines.GameAgent do
   end
 
   def follow_updates(game_agent, listener \\ self) do
-    ref = spawn(fn ->
-      :erlang.link(game_agent)
-      :erlang.monitor(:process, listener)
-      receive do
-        :done -> {}
-        {:DOWN, _, :process, ^listener, _} -> unfollow_updates(game_agent, self, listener)
-      end
-    end)
-    GenServer.cast(game_agent, {:follow, listener})
-    ref
+    GenServer.call(game_agent, {:follow, listener})
   end
 
-  def unfollow_updates(game_agent, ref, listener \\ self) do
-    send ref, :done
-    GenServer.cast(game_agent, {:unfollow, listener})
+  def unfollow_updates(game_agent, handler_ref) do
+    GenServer.cast(game_agent, {:unfollow, handler_ref})
   end
 
   defp report(game) do
     GameReport.report(game)
   end
 
-  defp notify_all(listeners, event, game_agent \\ self) do
-    spawn(fn ->
-      Enum.each(listeners, fn l ->
-        try do
-          send l, {event, game_agent}
-        rescue
-          _ -> {}
-        end
-      end)
-    end)
+  defp notify_all(state, event) do
+    GenEvent.notify(state.events, event)
   end
 
 end

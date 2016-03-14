@@ -74,7 +74,7 @@ defmodule Mines.Server.Http do
     {:reply, {:text, res}, req, state}
   end
 
-  def websocket_info(info, req, state) do
+  def websocket_info(_info, req, state) do
     {:ok, req, state, :hibernate}
   end
 
