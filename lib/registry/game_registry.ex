@@ -1,27 +1,9 @@
 defmodule Mines.GameRegistry do
 
-  @table_name :games_registry
+  @delegate Mines.GameRegistry.Mnesia
 
-  def init do
-    :ets.new(@table_name, [:named_table, :public])
-  end
-
-  def register(game_id, game) do
-    if :ets.insert_new(@table_name, {game_id, game}) do
-      {:ok, game_id}
-    else
-      {:error, :existing_id}
-    end
-  end
-
-  def get(game_id) do
-    case :ets.lookup(@table_name, game_id) do
-      [] ->
-        {:error, "Game #{game_id} not available"}
-      [{^game_id, game}] ->
-        {:ok, game}
-    end
-  end
+  defdelegate register(game_id, game), to: @delegate
+  defdelegate get(game_id), to: @delegate
 
 end
 
@@ -55,13 +37,13 @@ defmodule Mines.GameRegistry.Mnesia do
       Mnesia.write({@table_name, game_id, game})
     end)
     case result do
-      {:atomic, :ok} -> :ok
+      {:atomic, :ok} -> {:ok, game_id}
       {:aborted, reason} -> {:error, reason}
     end
   end
 
   def get(game_id) do
-    result = IO.inspect Mnesia.transaction(fn ->
+    result = Mnesia.transaction(fn ->
       Mnesia.read({@table_name, game_id})
     end)
     case result do
@@ -78,17 +60,13 @@ defmodule Mines.GameRegistry.Mnesia do
   end
 
   defp install_on(node) do
-    IO.puts(1)
     exec_on node, fn ->
       :mnesia.start
     end
-    IO.puts(2)
     Mnesia.change_config(:extra_db_nodes, [node])
-    IO.puts(3)
     exec_on node, fn ->
       :mnesia.add_table_copy(@table_name, node, :ram_copies)
     end
-    IO.puts(4)
   end
 
   defp exec_on(node, fun) do

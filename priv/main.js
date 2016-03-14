@@ -102,7 +102,7 @@ function isInteger(n) {
 }
 
 $(function () {
-  var server = 'ws://localhost:8080/websocket';
+  var server = 'ws://' + location.host + '/websocket';
   var ws = new WebSocket(server);
   var newGameMsg = /New game (\w+) started/;
 

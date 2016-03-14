@@ -11,11 +11,12 @@ defmodule Mines do
   def start(_type, _args) do
     import Supervisor.Spec
 
-    GameRegistry.init
+    :ok = GameRegistry.Mnesia.install
 
     children = [
       supervisor(Http.Supervisor, [port: 8081]),
-      supervisor(Telnet.Supervisor, [port: 2223])
+      supervisor(Telnet.Supervisor, [port: 2223]),
+      worker(GameRegistry.Mnesia, [], restart: :permanent)
     ]
 
     opts = [strategy: :one_for_one, name: Mines.Supervisor]
