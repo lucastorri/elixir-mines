@@ -13,6 +13,7 @@ defmodule Mines.GameAgent.EventHandler do
   use GenEvent
 
   def init([game_agent, listener]) do
+    :erlang.monitor(:process, listener)
     {:ok, {game_agent, listener}}
   end
 
@@ -23,6 +24,10 @@ defmodule Mines.GameAgent.EventHandler do
       _ -> {}
     end
     {:ok, state}
+  end
+
+  def handle_info({:DOWN, _, _, pid, _}, {_, listener}) when pid == listener do
+    :remove_handler
   end
 
 end
