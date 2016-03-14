@@ -10,6 +10,10 @@ defmodule Mines.Server.Http.Supervisor do
     start_link([])
   end
 
+  def start_link(arg = {_, _}) do
+    start_link([arg])
+  end
+
   def start_link(args) do
     args = Keyword.merge(@defaults, is_list(args) && args || [])
     Supervisor.start_link(__MODULE__, args)

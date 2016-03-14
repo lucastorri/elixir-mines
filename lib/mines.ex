@@ -14,8 +14,8 @@ defmodule Mines do
     GameRegistry.init
 
     children = [
-      supervisor(Http.Supervisor, [port: 8080]),
-      supervisor(Telnet.Supervisor, [port: 2323])
+      supervisor(Http.Supervisor, [port: 8081]),
+      supervisor(Telnet.Supervisor, [port: 2223])
     ]
 
     opts = [strategy: :one_for_one, name: Mines.Supervisor]
