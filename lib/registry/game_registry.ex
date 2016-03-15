@@ -116,4 +116,8 @@ defmodule Mines.GameRegistry.Mnesia.NodeMonitor do
     {:noreply, action}
   end
 
+  def handle_info(_, action) do
+    {:noreply, action}
+  end
+
 end

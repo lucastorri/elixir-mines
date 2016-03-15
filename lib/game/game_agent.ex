@@ -30,6 +30,10 @@ defmodule Mines.GameAgent.EventHandler do
     :remove_handler
   end
 
+  def handle_info(_, state) do
+    {:ok, state}
+  end
+
 end
 
 defmodule Mines.GameAgent do
