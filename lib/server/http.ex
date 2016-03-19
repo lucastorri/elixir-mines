@@ -122,7 +122,7 @@ defmodule Mines.Server.Http do
       end
 
 
-    ExJSON.generate(response |> Map.delete(:__struct__))
+    ExJSON.generate(response |> Map.from_struct)
   end
 
 end
